@@ -7,6 +7,9 @@
                  [gloss "0.2.6"]
                  ;; This project is a bit old, this will most likely be replaced with
                  ;; quill
+                 [org.clojure/data.json "0.2.6"]
+                 ;; Dealing with our binary data 
+                 [funcool/octet "1.1.1"]
                  [penumbra "0.6.0"]
                  [quil "3.0.0"]
                  [hask-tools "0.1.0-SNAPSHOT"]]
