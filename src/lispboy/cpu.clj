@@ -147,7 +147,7 @@
                                   (println "Cpu before: " cpu)
                                   (println "Cpu after: " changed-cpu))]
 
-    (changed-cpu-debug-print)
+    (changed-cpu-debug-print command arg)
     (println "Update code, press y to continue, anything else to quit")
     (if (=  "y" (read-line))
       (-> cpu (assoc :continue true))
