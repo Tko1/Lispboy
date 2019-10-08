@@ -1,0 +1,12 @@
+* Todos 
+** TODO Decide how and where to organize spec?
+** TODO Decide whether or not to spec so much
+   (example being; specing the variables in a let statement, is this too much?)
+** TODO Decide whether or not to consider this a good candidate for experimentation
+   In which case, as I typically have begun to do for 'experimentations of
+   balance' like this, where we hope to find the sweet spot for something, or at
+   the very least gain intuition on what complexities are being affected when
+   you add or remove some thing ( specs, in this case ),I will possibly try to go
+   to the extremes of specing everything, and not specing at all.
+___
+** TODO Add assertions to proper separate testing file

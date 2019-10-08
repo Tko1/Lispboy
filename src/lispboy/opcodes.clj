@@ -1,10 +1,43 @@
 (ns lispboy.opcodes
-  (:require [clojure.data.json :as json]))
+  (:require [clojure.data.json :as json]
+            [clojure.spec.alpha :as s]
+            [lispboy.util :as util]))
 
 ;; That's right,  I'm getting the actual data from online ..
 ;; (def raw-opcode-data
 ;;   (json/read-json  (slurp "https://gbdev.github.io/gb-opcodes/Opcodes.json")))
 
+(s/def ::byte-count (s/and int?
+                           #(<= % 3)
+                           #(>= % 1)))
+;; TODO move to appropriate test file
+(assert (s/valid? ::byte-count 1))
+(assert (s/valid? ::byte-count 2))
+(assert (s/valid? ::byte-count 3))
+(assert (not (s/valid? ::byte-count 4)))
+(assert (not (s/valid? ::byte-count 0)))
+(assert (not (s/valid? ::byte-count -51)))
+(assert (not (s/valid? ::byte-count 142)))
+(assert (not (s/valid? ::byte-count 2.5)))
+(s/def ::word16-opcode (s/and ::util/word16
+                              ;; Is our opcode 0xCBxx ?  
+                              #(= (bit-and % 0xFF00)
+                                  0xCB00)))
+;; TODO move to appropriate test file 
+(assert  (s/valid? ::word16-opcode  0xCBFD))
+(assert  (not  (s/valid? ::word16-opcode  0xCCFD)))
+
+(s/def ::opcode (s/or :unprefixed ::util/word8
+                      :prefixed ::word16-opcode))
+
+(assert (s/valid? ::opcode 0xCBFD))
+(assert (s/valid? ::opcode 0xCBFF))
+(assert (s/valid? ::opcode 0xCB00))
+(assert (s/valid? ::opcode 0x0000))
+(assert (s/valid? ::opcode 0x14))
+(assert  (s/valid? ::opcode 0xA7))
+(assert (not  (s/valid? ::opcode 0xCCFF)))
+(assert (not  (s/valid? ::opcode 0x0101)))
 ;; I have written it out here, however,
 ;; so you can actually read / write / manipulate this yourself
 (def raw-opcode-data
