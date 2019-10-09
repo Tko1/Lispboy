@@ -38,6 +38,17 @@
 (assert  (s/valid? ::opcode 0xA7))
 (assert (not  (s/valid? ::opcode 0xCCFF)))
 (assert (not  (s/valid? ::opcode 0x0101)))
+
+(s/def ::opcode-data
+  (s/keys :req-un [::mnemonic ::bytes ::cycles ::operands ::immediate ::flags]))
+
+(assert
+ (s/valid? ::opcode-data {:mnemonic "AND",
+                          :bytes 1,
+                          :cycles [4],
+                          :operands [{:name "A", :immediate true}],
+                          :immediate true,
+                          :flags {:Z "Z", :N "0", :H "1", :C "0"}}))
 ;; I have written it out here, however,
 ;; so you can actually read / write / manipulate this yourself
 (def raw-opcode-data
