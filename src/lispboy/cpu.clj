@@ -72,6 +72,9 @@
          (s/assert ::util/word16 word16)]
    :post [(s/assert ::cpu %)]}
   (jp cpu word16))
+;; Load from one reg to another 
+(defn ld-regs [cpu rega regb]
+  (assoc cpu rega (get cpu regb)))
 ;; Reads opcode and args
 ;; Returns [opcode,  word8 | word16 argument]
 ;; TODO separate this spec? It seems very specific to this area 
@@ -102,13 +105,29 @@
                         (get-byte-at cartridge (+ n 2))])))]
 
     (if arg [opcode arg] [opcode])))
-
+;; Figures out, from opcode data, which ld function to use
+(defn ld-dispatch [{:keys [mnemonic bytes cycles operands immediate flags]
+                    :as opcode-data}]
+  {:pre [(s/assert ::op/opcode-data opcode-data)
+         (= mnemonic "LD")]
+   :post [;; (fn? %)
+          ]}
+  (let [both-intermediates (and (= (count operands) 2)
+                                (:immediate (first operands))
+                                (:immediate (second operands)))
+        ld-regs? (and (= bytes 1) both-intermediates)]
+    (cond
+      ld-regs?
+      "ld-reg"
+      :else
+      "Fail")))
+(ld-dispatch (get-in op/raw-opcode-data [:unprefixed 0x42]))
 (defn run-instruction-bytes [cpu [raw-opcode arg :as instr-bytes]]
   {:pre [(s/assert ::cpu cpu)
          (s/assert ::instruction-bytes instr-bytes)]
    :post [(s/assert ::cpu %)] }
-  (let [opcode (-> raw-opcode-data :unprefixed (get raw-opcode))
-        mnemonic (-> opcode :mnemonic)
+  (let [opcode-data (-> raw-opcode-data :unprefixed (get raw-opcode))
+        mnemonic (-> opcode-data :mnemonic)
         operands-printer (fn [ops]
                            (->> ops
                                 (map :name)
@@ -116,6 +135,8 @@
         command           (case mnemonic
                             "JP"
                             jp
+                            "LD"
+                            (ld-dispatch opcode-data)
                             nil)
         changed-cpu            (cond
                                  (and command arg)
@@ -136,14 +157,14 @@
                                     "Instruction %x; %s %s (Arg: %s)(Z: %s N: %s H: %s C: %s)"
                                     raw-opcode
                                     mnemonic
-                                    (-> opcode :operands operands-printer)
+                                    (-> opcode-data :operands operands-printer)
                                     arg
-                                    (-> opcode :flags :Z)
-                                    (-> opcode :flags :N)
-                                    (-> opcode :flags :H)
-                                    (-> opcode :flags :C)
+                                    (-> opcode-data :flags :Z)
+                                    (-> opcode-data :flags :N)
+                                    (-> opcode-data :flags :H)
+                                    (-> opcode-data :flags :C)
                                     ))
-                                  (println "Bytes: " (-> opcode :bytes) ", Cycles: " (-> opcode :cycles))
+                                  (println "Bytes: " (-> opcode-data :bytes) ", Cycles: " (-> opcode-data :cycles))
                                   (println "Cpu before: " cpu)
                                   (println "Cpu after: " changed-cpu))]
 
