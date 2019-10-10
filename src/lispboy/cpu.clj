@@ -74,6 +74,9 @@
   (jp cpu word16))
 ;; Load from one reg to another 
 (defn ld-regs [cpu rega regb]
+  {:pre [(keyword? rega)
+         (keyword? regb)]
+   :post [(s/assert ::cpu %)]}
   (assoc cpu rega (get cpu regb)))
 ;; Reads opcode and args
 ;; Returns [opcode,  word8 | word16 argument]
@@ -115,13 +118,20 @@
   (let [both-intermediates (and (= (count operands) 2)
                                 (:immediate (first operands))
                                 (:immediate (second operands)))
-        ld-regs? (and (= bytes 1) both-intermediates)]
+        ld-regs? (and (= bytes 1) both-intermediates)
+        operand-to-reg (fn [op] (-> op :name clojure.string/lower-case keyword))]
     (cond
       ld-regs?
-      "ld-reg"
+      (fn [cpu]
+        (ld-regs cpu
+                 (operand-to-reg (first operands))
+                 (operand-to-reg (second operands))))
+      ;; "ld-reg"
       :else
-      "Fail")))
-(ld-dispatch (get-in op/raw-opcode-data [:unprefixed 0x42]))
+      (fn [cpu]
+        (println "Could not dispatch LD")
+        cpu))))
+
 (defn run-instruction-bytes [cpu [raw-opcode arg :as instr-bytes]]
   {:pre [(s/assert ::cpu cpu)
          (s/assert ::instruction-bytes instr-bytes)]
